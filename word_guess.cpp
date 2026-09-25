@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <cctype>
 
 const int MAX_CHANCES = 6;
 
@@ -38,18 +39,40 @@ std::string chooseCategory() {
     for (int i = 0; i < (int)names.size(); i++)
         std::cout << "  " << (i + 1) << ". " << names[i] << "\n";
 
-    int choice = 0;
-    while (choice < 1 || choice > (int)names.size()) {
+    while (true) {
         std::cout << "\nChoose a category (number): ";
-        std::cin >> choice;
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(1000, '\n');
-            choice = 0;
+        std::string input;
+        std::getline(std::cin, input);
+
+        // Remove leading/trailing spaces
+        input.erase(0, input.find_first_not_of(" \t"));
+        if (input.empty()) {
+            std::cout << "Error: Please enter a number from the list.\n";
+            continue;
         }
+        input.erase(input.find_last_not_of(" \t") + 1);
+
+        bool validNumber = true;
+        for (char c : input) {
+            if (!std::isdigit(static_cast<unsigned char>(c))) {
+                validNumber = false;
+                break;
+            }
+        }
+
+        if (!validNumber) {
+            std::cout << "Error: Please enter a valid number only, not a word.\n";
+            continue;
+        }
+
+        int choice = std::stoi(input);
+        if (choice < 1 || choice > (int)names.size()) {
+            std::cout << "Error: Please choose a number between 1 and " << names.size() << ".\n";
+            continue;
+        }
+
+        return names[choice - 1];
     }
-    std::cin.ignore(1000, '\n');
-    return names[choice - 1];
 }
 
 void playGame() {
@@ -58,11 +81,11 @@ void playGame() {
     std::string word = wordList[rand() % wordList.size()];
 
     std::set<char> guessed;
-    int chancesLeft = MAX_CHANCES;
+    int chancesLeft = (int)word.length();
 
     std::cout << "\nCategory: " << category << "\n";
     std::cout << "The word has " << word.length() << " letters.\n";
-    std::cout << "You have " << MAX_CHANCES << " chances.\n\n";
+    std::cout << "You have " << chancesLeft << " chances.\n\n";
 
     while (chancesLeft > 0) {
         std::string display = displayWord(word, guessed);
